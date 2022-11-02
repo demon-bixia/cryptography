@@ -1,5 +1,6 @@
 """mszkowski.py"""
-from utils import encrypt, decrypt
+from decrypt_myszkowski import decrypt
+from encrypt_myszkowski import encrypt
 
 
 def main():

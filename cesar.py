@@ -3,15 +3,15 @@
 import string
 
 
-alphabets = [*string.ascii_lowercase]
+symbols = [*string.ascii_lowercase]
 
 
 def forward(index: int, shift: int) -> int:
     """
     get the index of the next letter in the aplhabet
     """
-    next_index = round(index + shift) % 24 if index + \
-        shift > 24 else index + shift
+    next_index = round(index + shift) % len(symbols) if index + \
+        shift > len(symbols) else index + shift
 
     return next_index
 
@@ -20,7 +20,7 @@ def backward(index: int, shift: int) -> int:
     """
     get the index of the original letter in the alphabet
     """
-    return round(index - shift) % 24
+    return round(index - shift) % len(symbols)
 
 
 def cesar(text: str, shift: int, decrypt: bool = False) -> str:
@@ -31,10 +31,10 @@ def cesar(text: str, shift: int, decrypt: bool = False) -> str:
 
     for letter in text:
         try:
-            index_of_letter = alphabets.index(letter)
+            index_of_letter = symbols.index(letter)
             new_letter_index = forward(
                 index_of_letter, shift) if not decrypt else backward(index_of_letter, shift)
-            cypher = cypher + alphabets[new_letter_index]
+            cypher = cypher + symbols[new_letter_index]
         except ValueError:
             cypher = cypher + letter
 
@@ -43,7 +43,7 @@ def cesar(text: str, shift: int, decrypt: bool = False) -> str:
 
 def hack_cesar(text: str):
     """display a list of every possible decryption"""
-    for index in range(len(alphabets)):
+    for index in range(len(symbols)):
         print(cesar(text, index+1, True), '\n')
 
 
@@ -52,13 +52,15 @@ def main():
     execute ceasar program
     """
 
-    encrypted_cypher = cesar('hello world', 24)
+    # encryption
+    encrypted_cypher = cesar('hello world', 26)
     print('encryption: ', encrypted_cypher, '\n')
 
-    print('decryption: ', cesar(encrypted_cypher, 24, True), '\n')
+    # decryiption using key
+    print('decryption: ', cesar(encrypted_cypher, 26, True), '\n')
 
-    print(hack_cesar.__doc__, '\n')
-    hack_cesar(encrypted_cypher)
+    # brute force hack
+    print(hack_cesar(encrypted_cypher))
 
 
 if __name__ == '__main__':
