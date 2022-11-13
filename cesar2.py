@@ -21,7 +21,7 @@ def get_symbol_group(symbol: str) -> str:
     return SYMBOLS
 
 
-def cesar(message: str, key: int = 3, mode: str = "encrypt") -> str:
+def cesar(message: str, key: int = 3, decrypt: bool = False) -> str:
     """
     encrypt / decrypt messages using cesar cypher
     """
@@ -37,10 +37,10 @@ def cesar(message: str, key: int = 3, mode: str = "encrypt") -> str:
             # get the encrypted (or decrypted) number for this symbol
             index = group.find(symbol)  # get the number of the symbol
 
-            if mode == 'encrypt':
-                index = index + key
-            elif mode == 'decrypt':
+            if decrypt:
                 index = index - key
+            else:
+                index = index + key
 
             # handle the wrap-around if num is larger than the length of
             # LETTERS or less than 0
@@ -70,12 +70,12 @@ def main() -> None:
     key = int(input('enter The encryption key: '))
 
     # encrypt messages using cesar cypher
-    cyphertext = cesar(plaintext, key=key, mode="encrypt")
+    cyphertext = cesar(plaintext, key=key)
     # print the encrypted message
     print("encrypted message: ", cyphertext)
 
     # decrypted messages using cesar cypher
-    plaintext = cesar(cyphertext, key=key, mode="decrypt")
+    plaintext = cesar(cyphertext, key=key, decrypt=True)
     # print the decrypted message
     print("decrypted message: ", plaintext)
 

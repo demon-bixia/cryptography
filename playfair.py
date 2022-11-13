@@ -57,20 +57,23 @@ def split_plain_text(plain_text: str):
     index = 0
     plain_text_pairs = []
 
-    index = 0
-
     while index < len(plain_text):
         first_letter = plain_text[index]
         if (index + 1) == len(plain_text):
+            # if the last pair is less than 2 add x
             second_letter = 'x'
             BOGUS_LOCATIONS.append(index + 2)
         else:
+            # else add the second letter of the pair
             second_letter = plain_text[index + 1]
 
         if first_letter != second_letter:
+            # if the letters are not equal then add them to plain_text_pairs
             plain_text_pairs.append(first_letter + second_letter)
             index += 2
         else:
+            # else if the letter is repeated then add x instead of the second
+            # ones
             plain_text_pairs.append(first_letter + 'x')
             BOGUS_LOCATIONS.append(index + 1)
             index += 1
@@ -94,126 +97,94 @@ def split_cipher_text(cipher_text: str):
     return cipher_text_pairs
 
 
-def encrypt(plain_text: str, key: str):
+def playfair(plain_text: str, key: str, decrypt: bool = False):
     """
     encrypt plaintext using playfair cypher.
     """
     plain_text_pairs = []
     cipher_text_pairs = []
 
+    # create the key grid
     key_grid = create_keys(key)
-
+    
+    # remove spaces and convert to lower case
     text = plain_text.replace(' ', '')
     text = text.lower()
 
-    plain_text_pairs = split_plain_text(text)
+    # split plaintext into pairs and add bogus letters
+    plain_text_pairs = split_cipher_text(text) if decrypt else split_plain_text(text)
 
     for pair in plain_text_pairs:
-        flag = False
+        skip = False
+        
+        # loop the keygrid rows
         for row in key_grid:
+            # if the pair are in the same row
             if pair[0] in row and pair[1] in row:
-                row_index_1 = row.find(pair[0])
-                row_index_2 = row.find(pair[1])
-                cipher_text_pair = row[(row_index_1 + 1) %
-                                       5] + row[(row_index_2 + 1) % 5]
-                cipher_text_pairs.append(cipher_text_pair)
-                flag = True
+                pair_1_index = row.find(pair[0])
+                pair_2_index = row.find(pair[1])
+                if decrypt:
+                    # if we are decrypting replace them with the item right to them
+                    cipher_text_pair = row[(pair_1_index + 4) %
+                                        5] + row[(pair_2_index + 4) % 5]
+                else:
+                    # if we are encrypting replace them with the item right to them
+                    cipher_text_pair = row[(pair_1_index + 1) %
+                                        5] + row[(pair_2_index + 1) % 5]
 
-        if flag:
+                cipher_text_pairs.append(cipher_text_pair)
+                skip = True
+
+        # and skip to the next pair
+        if skip:
             continue
 
-        for letter in range(5):
-            col = "".join([key_grid[i][letter] for i in range(5)])
+        # loop the key grid columns 
+        for col_index in range(5):
+            # extract columns from grid
+            col = "".join([key_grid[row_index][col_index] for row_index in range(5)])
+            
+            # and if the pairs are in the same columns
             if pair[0] in col and pair[1] in col:
-                col_index_1 = col.find(pair[0])
-                col_index_2 = col.find(pair[1])
-                cipher_text_pair = col[(col_index_1 + 1) %
-                                       5] + col[(col_index_2 + 1) % 5]
+                pair_1_index = col.find(pair[0])
+                pair_2_index = col.find(pair[1])
+                if decrypt:
+                    # if we are decrypting replace replace them with the letters upove them
+                    cipher_text_pair = col[(pair_1_index + 4) %
+                                            5] + col[(pair_2_index + 4) % 5]
+                else:
+                    # if we are encrypting replace them with the letters below them
+                    cipher_text_pair = col[(pair_1_index + 1) %
+                                        5] + col[(pair_2_index + 1) % 5]
                 cipher_text_pairs.append(cipher_text_pair)
-                flag = True
+                skip = True
 
-        if flag:
+        # then skip to the next pair
+        if skip:
             continue
 
-        col_index_1 = 0
-        col_index_2 = 0
-        row_index_1 = 0
-        row_index_2 = 0
+        letter_1_row_index = 0
+        letter_1_col_index = 0
 
-        for index in range(5):
-            row = key_grid[index]
+        letter_2_row_index = 0
+        letter_2_col_index = 0
+        
+        # loop the keygrid rows
+        for index, row in enumerate(key_grid):
+            # get the position of the 2 letters in the keygrid
             if pair[0] in row:
-                col_index_1 = index
-                row_index_1 = row.find(pair[0])
+                letter_1_row_index = index
+                letter_1_col_index = row.find(pair[0])
             if pair[1] in row:
-                col_index_2 = index
-                row_index_2 = row.find(pair[1])
-        cipher_text_pair = key_grid[col_index_1][row_index_2] + \
-            key_grid[col_index_2][row_index_1]
+                letter_2_row_index = index
+                letter_2_col_index = row.find(pair[1])
+
+        # replace the letter with letter in the column index of the second letter index
+        cipher_text_pair = key_grid[letter_1_row_index][letter_2_col_index] + \
+            key_grid[letter_2_row_index][letter_1_col_index]
         cipher_text_pairs.append(cipher_text_pair)
 
     return "".join(cipher_text_pairs)
-
-
-def decrypt(cipher_text, key):
-    """
-    decrypt playfair cypher ciphertext.
-    """
-    cipher_text = cipher_text.lower()
-    plain_text_pairs = []
-    cipher_text_pairs = []
-    key_grid = create_keys(key)
-
-    cipher_text_pairs = split_cipher_text(cipher_text)
-
-    for pair in cipher_text_pairs:
-        flag = False
-        for row in key_grid:
-            if pair[0] in row and pair[1] in row:
-                row_index_1 = row.find(pair[0])
-                row_index_2 = row.find(pair[1])
-                plain_text_pair = row[(row_index_1 + 4) %
-                                      5] + row[(row_index_2 + 4) % 5]
-                plain_text_pairs.append(plain_text_pair)
-                flag = True
-
-        if flag:
-            continue
-
-        for counter in range(5):
-            col = "".join([key_grid[index][counter] for index in range(5)])
-
-            if pair[0] in col and pair[1] in col:
-                col_index_1 = col.find(pair[0])
-                col_index_2 = col.find(pair[1])
-                plain_text_pair = col[(col_index_1 + 4) %
-                                      5] + col[(col_index_2 + 4) % 5]
-                plain_text_pairs.append(plain_text_pair)
-                flag = True
-
-        if flag:
-            continue
-
-        col_index_1 = 0
-        col_index_2 = 0
-        row_index_1 = 0
-        row_index_2 = 0
-
-        for index in range(5):
-            row = key_grid[index]
-            if pair[0] in row:
-                col_index_1 = index
-                row_index_1 = row.find(pair[0])
-            if pair[1] in row:
-                col_index_2 = index
-                row_index_2 = row.find(pair[1])
-
-        plain_text_pair = key_grid[col_index_1][row_index_2] + \
-            key_grid[col_index_2][row_index_1]
-
-        plain_text_pairs.append(plain_text_pair)
-
-    return "".join(plain_text_pairs)
 
 
 def main():
@@ -223,10 +194,10 @@ def main():
     plain_text = "hello world"
     key = "abcde"
 
-    cipher_text = encrypt(plain_text, key)
+    cipher_text = playfair(plain_text, key)
     print(cipher_text)
 
-    plain_text = remove_bogus_location(decrypt(cipher_text, key))
+    plain_text = remove_bogus_location(playfair(cipher_text, key, True))
     print(plain_text)
 
 
