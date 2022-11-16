@@ -3,6 +3,7 @@ import string
 
 # Save the indexs where bogus were added
 BOGUS_LOCATIONS = []
+SPACE_LOCATIONS = []
 
 
 def remove_bogus_location(plain_text: str):
@@ -13,6 +14,18 @@ def remove_bogus_location(plain_text: str):
 
     for index in BOGUS_LOCATIONS:
         plain_text_list[index] = ''
+
+    return "".join(plain_text_list)
+
+
+def add_spaces(plain_text: str):
+    """
+    add spaces back to plaintext
+    """
+    plain_text_list = list(plain_text)
+
+    for index in SPACE_LOCATIONS:
+        plain_text_list.insert(index, ' ')
 
     return "".join(plain_text_list)
 
@@ -106,17 +119,23 @@ def playfair(plain_text: str, key: str, decrypt: bool = False):
 
     # create the key grid
     key_grid = create_keys(key)
-    
+
+    # record the location of white spaces
+    for index, letter in enumerate(plain_text):
+        if letter == ' ':
+            SPACE_LOCATIONS.append(index)
+
     # remove spaces and convert to lower case
     text = plain_text.replace(' ', '')
     text = text.lower()
 
     # split plaintext into pairs and add bogus letters
-    plain_text_pairs = split_cipher_text(text) if decrypt else split_plain_text(text)
+    plain_text_pairs = split_cipher_text(
+        text) if decrypt else split_plain_text(text)
 
     for pair in plain_text_pairs:
         skip = False
-        
+
         # loop the keygrid rows
         for row in key_grid:
             # if the pair are in the same row
@@ -126,11 +145,11 @@ def playfair(plain_text: str, key: str, decrypt: bool = False):
                 if decrypt:
                     # if we are decrypting replace them with the item right to them
                     cipher_text_pair = row[(pair_1_index + 4) %
-                                        5] + row[(pair_2_index + 4) % 5]
+                                           5] + row[(pair_2_index + 4) % 5]
                 else:
                     # if we are encrypting replace them with the item right to them
                     cipher_text_pair = row[(pair_1_index + 1) %
-                                        5] + row[(pair_2_index + 1) % 5]
+                                           5] + row[(pair_2_index + 1) % 5]
 
                 cipher_text_pairs.append(cipher_text_pair)
                 skip = True
@@ -139,11 +158,12 @@ def playfair(plain_text: str, key: str, decrypt: bool = False):
         if skip:
             continue
 
-        # loop the key grid columns 
+        # loop the key grid columns
         for col_index in range(5):
             # extract columns from grid
-            col = "".join([key_grid[row_index][col_index] for row_index in range(5)])
-            
+            col = "".join([key_grid[row_index][col_index]
+                          for row_index in range(5)])
+
             # and if the pairs are in the same columns
             if pair[0] in col and pair[1] in col:
                 pair_1_index = col.find(pair[0])
@@ -151,11 +171,11 @@ def playfair(plain_text: str, key: str, decrypt: bool = False):
                 if decrypt:
                     # if we are decrypting replace replace them with the letters upove them
                     cipher_text_pair = col[(pair_1_index + 4) %
-                                            5] + col[(pair_2_index + 4) % 5]
+                                           5] + col[(pair_2_index + 4) % 5]
                 else:
                     # if we are encrypting replace them with the letters below them
                     cipher_text_pair = col[(pair_1_index + 1) %
-                                        5] + col[(pair_2_index + 1) % 5]
+                                           5] + col[(pair_2_index + 1) % 5]
                 cipher_text_pairs.append(cipher_text_pair)
                 skip = True
 
@@ -168,7 +188,7 @@ def playfair(plain_text: str, key: str, decrypt: bool = False):
 
         letter_2_row_index = 0
         letter_2_col_index = 0
-        
+
         # loop the keygrid rows
         for index, row in enumerate(key_grid):
             # get the position of the 2 letters in the keygrid
@@ -184,7 +204,13 @@ def playfair(plain_text: str, key: str, decrypt: bool = False):
             key_grid[letter_2_row_index][letter_1_col_index]
         cipher_text_pairs.append(cipher_text_pair)
 
-    return "".join(cipher_text_pairs)
+    cipher_text = "".join(cipher_text_pairs)
+
+    if decrypt:
+        cipher_text = add_spaces(remove_bogus_location(cipher_text))
+        BOGUS_LOCATIONS = []
+
+    return cipher_text
 
 
 def main():
@@ -197,7 +223,7 @@ def main():
     cipher_text = playfair(plain_text, key)
     print(cipher_text)
 
-    plain_text = remove_bogus_location(playfair(cipher_text, key, True))
+    plain_text = playfair(cipher_text, key, True)
     print(plain_text)
 
 

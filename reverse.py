@@ -1,8 +1,9 @@
-def reverse(plaintext:str):
+def reverse(plaintext: str):
     """
     reverse the word
     """
     return plaintext[::-1]
+
 
 def main():
     """
@@ -11,10 +12,10 @@ def main():
     plaintext = input('enter plain text: ')
 
     ciphertext = reverse(plaintext)
-    print('cipertext: ', ciphertext, '\n')    
+    print('cipertext: ', ciphertext, '\n')
 
     plaintext = reverse(ciphertext)
-    print('plaintext: ', plaintext, '\n')    
+    print('plaintext: ', plaintext, '\n')
 
 
 if __name__ == "__main__":
